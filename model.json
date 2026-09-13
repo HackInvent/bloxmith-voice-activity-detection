@@ -1,5 +1,8 @@
 {
   "kind": "voice_activity_detection", "title": "Détection de voix (VAD)",
+  "version": "0.1.0",
+  "bloxsmith_compatibility": ["1.0.9"],
+  "tested_with_bloxsmith": "1.0.9",
   "ports": {
     "inputs": [
       {"id": 1, "name": "audio_in", "title": "Audio in", "accepts": ["audio/*"],
