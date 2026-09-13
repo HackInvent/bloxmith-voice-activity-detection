@@ -1,0 +1,21 @@
+{
+  "kind": "voice_activity_detection", "title": "Détection de voix (VAD)",
+  "ports": {
+    "inputs": [
+      {"id": 1, "name": "audio_in", "title": "Audio in", "accepts": ["audio/*"],
+       "multiplicity": "one", "required": false, "execution_requirement": "not_required_for_execution",
+       "transport": "audio_stream", "audio_stream": {"codecs": ["opus"], "sample_rates_hz": [48000],
+       "channels": [1, 2], "overflow_policy": "disconnect"}},
+      {"id": 2, "name": "command_in", "title": "Cycle du flux", "accepts": ["application/json"],
+       "multiplicity": "one", "required": false, "execution_requirement": "not_required_for_execution", "transport": "message"}
+    ],
+    "outputs": [{"id": 1, "name": "events_out", "title": "Activité vocale", "emits": ["application/json"],
+                 "multiplicity": "many", "transport": "message"}]
+  },
+  "config": {"aggressiveness": 2, "speech_start_ms": 160, "silence_ms": 500, "min_level_dbfs": -48, "drain_timeout_sec": 5},
+  "port_capabilities": {"can_add_inputs": false, "can_add_outputs": false, "allow_required_input": false,
+    "default_required": false, "max_inputs": 2, "max_outputs": 1, "default_multiplicity": "one"},
+  "runtime": {"initial_state": "waiting", "runtime_executable": true, "active_worker": true,
+    "generic_source": false, "centralized_executor": "generic", "supports_runtime_audio_streams": true,
+    "active_execution_policy": "on_each_event"}
+}
