@@ -437,12 +437,6 @@ class VoiceActivityDetectionBlock(BlockDefinition):
             for item in captures.values():
                 item.close()
 
-    def ui_assets(self, surface: str = "modal") -> list[dict[str, str]]:
-        """Declare owned settings assets; no browser audio participant belongs to this block."""
-        if surface in {"modal", "inspector_panel"}:
-            return [{"kind": "css", "path": "assets/css/block_ui.css"}, {"kind": "js", "path": "assets/js/common.js"},
-                    {"kind": "js", "path": f"assets/js/{'block_modal' if surface == 'modal' else surface}.js"}]
-        return []
 
     def _settings_html(self, node: dict) -> str:
         """Place speech timing first and explain all tuning with associated labels."""

@@ -1,8 +1,7 @@
-/** Register block-owned VAD inspector settings. */
-(function () {
-  const registry = (window.CWBlockUiBlocks = window.CWBlockUiBlocks || {});
-  registry.voice_activity_detectionInspectorPanel = {
-    /** Bind inspector fields; its lifetime never owns audio or the detector. */
-    mount(root, api) { return window.CWVoiceActivityDetection.mount(root, api); },
-  };
-})();
+/** Bind this release's settings; surface cleanup never owns the audio detector. */
+import { mountSettings } from "./common.js";
+
+/** Mount one settings surface through its injected public API; return UI-only cleanup. */
+export function mount(root, api) {
+  return mountSettings(root, api);
+}

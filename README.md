@@ -1,7 +1,7 @@
 # Voice Activity Detection (VAD)
 
 <!-- block-metadata:start -->
-[![Block version: 0.1.0](https://img.shields.io/badge/block-0.1.0-blue)](model.json)
+[![Block version: 0.1.1](https://img.shields.io/badge/block-0.1.1-blue)](model.json)
 [![BloxSmith compatibility: 1.0.9](https://img.shields.io/badge/BloxSmith-1.0.9-brightgreen)](compatibility.json)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
@@ -101,16 +101,35 @@ Official weights are bundled in `assets/models/`, with their MIT license and a S
 
 ## Verification
 
+### Release UI contract (0.1.1)
+
+The manifest now declares modal and inspector assets, including their shared
+relative import. Both entrypoints export ES-module `mount` functions and share a
+release-local settings helper; there is no unversioned browser registration.
+CSS is scoped to `voice_activity_detection@0.1.1`. Closing/replacing a surface
+detaches its field listeners without touching the detector.
+
+This migration does not change the Silero model, speech thresholds, audio ports
+or false-positive filtering. Existing releases and blueprints are not rewritten:
+install or reload `0.1.1` and explicitly select that node version. Legacy
+unversioned UI loading is not supported by these release modules.
+
 From the private `bloxmith-blocs` test workspace, run `python3 -B tests/run_tests.py voice_activity_detection`. Captures go to ignored test results, without hard-coded personal paths.
 
 Suite `F5.51_voice_activity_detection.py` covers contracts, both modes, the real Silero model on speech synthesized locally using FFmpeg `flite`, silence, repeated non-voice clicks, intermittent 400 ms noise, non-speech tones, brief replies, attenuated speech, quiet noise, DC offset, speech after noise, fragmented windows, hysteresis, offsets, mono/stereo WebM/Ogg Opus, events before stop, clean shutdown, counter/stream errors, cancellation and a Microphone → VAD → Display graph.
 
 Reversed input ordering is covered during preparation, command reception and the real mini-graph, in simulation and Active Runtime; invalid contracts remain rejected. Properties are exercised in the real shell: validation, saving, inspector, opaque modal, internal scrolling and accessible actions at 1,440, 390 and 320 px. The card uses public escaped-text rendering; titles are never interpreted as HTML. `flite` is a test-only prerequisite. No remote API, microphone permission, key or user data is used.
 
+The properties regression now installs and links the current package through the
+real framework, checking returned assets and persisted settings in both cases.
+`F5.52_vad_release_runtime.py` additionally checks simulation and feeds locally
+synthesized Opus through the public browser bridge to the installed/linked VAD
+before Play. A real downstream display must receive the speech event.
+
 The package owns its model, Python implementation, templates, modal/inspector assets, README, dependencies and tests. Only public `bloxsmith_app.block_api` imports cross the framework boundary in `block.py`.
 
 ## Compatibility policy
 
-[compatibility.json](compatibility.json) records HackInvent's verified BloxSmith versions and test evidence. Only the versions listed above have been verified, using the block-owned suites in a **bundled-block test installation**. This is not a certification of managed-package installation, every browser/OS, or live provider availability. Other framework versions are unverified, not necessarily incompatible.
+[compatibility.json](compatibility.json) records HackInvent's verified BloxSmith versions and test evidence. The outer harness is a **bundled-block test installation**; the release-specific suites described above additionally install and link this package through the real framework. Evidence covers those explicit cases, not every distribution format, browser/OS or live provider. Other framework versions are unverified, not necessarily incompatible.
 
 The block-version badge follows `model.json`, not a published Git tag. `unversioned` means that no block release version is declared; no number is inferred from the framework version. The framework still uses `model.json` for its runtime/install contract; the tester-owned JSON does not replace it. Official integration tests run in the private `bloxmith-blocs` workspace. Test helpers and the proprietary framework are not bundled in this public block repository.

@@ -1,29 +1,29 @@
 /* Native opaque modal shell; all VAD-specific layout stays within its owning package. */
-.vad-ui.block-config-modal { display:flex; flex-direction:column; width:min(680px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); background:var(--panel,#fff); color:var(--ink,#252b36); margin-inline:auto; }
-.vad-ui .vad-header { flex:0 0 auto; padding:20px 24px; gap:16px; }
-.vad-ui .vad-header h2 { overflow-wrap:anywhere; margin:5px 0 0; }
-.vad-ui .vad-header button { flex-shrink:0; }
-.vad-ui .vad-body { display:flex; flex-direction:column; gap:20px; overflow:auto; min-height:0; padding:20px 24px; }
-.vad-ui section { min-width:0; flex-shrink:0; }
-.vad-ui h3 { font-size:14px; margin:0 0 12px; }
-.vad-ui p { font-size:13px; line-height:1.55; overflow-wrap:anywhere; margin:8px 0; }
-.vad-ui .vad-note { padding:16px; border:1px solid var(--line); border-radius:10px; background:var(--panel-soft); }
-.vad-ui .vad-help { color:var(--muted-strong); font-size:12px; }
-.vad-ui label { display:flex; flex-direction:column; gap:8px; min-width:0; color:var(--ink); font-size:13px; line-height:1.4; margin-top:14px; }
-.vad-ui input { min-width:0; width:100%; min-height:40px; box-sizing:border-box; font:inherit; }
-.vad-ui .vad-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; }
-.vad-ui .vad-actions { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; padding:16px 24px; border-top:1px solid var(--line); background:var(--panel); flex:0 0 auto; }
-.vad-ui .vad-actions p { flex:1 1 160px; font-size:12px; color:var(--muted-strong); margin:0; }
-.vad-ui .vad-actions button { margin-left:auto; min-width:110px; }
-.vad-ui [data-error="true"] { color:var(--danger-ink); }
-.vad-ui :is(button,input):focus-visible { outline:2px solid var(--accent-strong); outline-offset:3px; }
-.vad-ui button:disabled { opacity:.55; cursor:not-allowed; }
-.vad-ui .block-modal-error-tabs,.vad-ui .block-modal-error-panel { background:transparent; padding:8px 0 0; }
-.cw-block-inspector.vad-ui .vad-fields { grid-template-columns:minmax(0,1fr); }
-.cw-block-inspector.vad-ui section { margin-top:16px; }
-.cw-block-inspector.vad-ui .vad-actions { padding:8px 0; border:0; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui.block-config-modal { display:flex; flex-direction:column; width:min(680px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); background:var(--panel,#fff); color:var(--ink,#252b36); margin-inline:auto; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-header { flex:0 0 auto; padding:20px 24px; gap:16px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-header h2 { overflow-wrap:anywhere; margin:5px 0 0; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-header button { flex-shrink:0; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-body { display:flex; flex-direction:column; gap:20px; overflow:auto; min-height:0; padding:20px 24px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui section { min-width:0; flex-shrink:0; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui h3 { font-size:14px; margin:0 0 12px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui p { font-size:13px; line-height:1.55; overflow-wrap:anywhere; margin:8px 0; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-note { padding:16px; border:1px solid var(--line); border-radius:10px; background:var(--panel-soft); }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-help { color:var(--muted-strong); font-size:12px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui label { display:flex; flex-direction:column; gap:8px; min-width:0; color:var(--ink); font-size:13px; line-height:1.4; margin-top:14px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui input { min-width:0; width:100%; min-height:40px; box-sizing:border-box; font:inherit; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-actions { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; padding:16px 24px; border-top:1px solid var(--line); background:var(--panel); flex:0 0 auto; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-actions p { flex:1 1 160px; font-size:12px; color:var(--muted-strong); margin:0; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-actions button { margin-left:auto; min-width:110px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui [data-error="true"] { color:var(--danger-ink); }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui :is(button,input):focus-visible { outline:2px solid var(--accent-strong); outline-offset:3px; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui button:disabled { opacity:.55; cursor:not-allowed; }
+[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .block-modal-error-tabs,[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .block-modal-error-panel { background:transparent; padding:8px 0 0; }
+[data-block-release="voice_activity_detection@0.1.1"] .cw-block-inspector.vad-ui .vad-fields { grid-template-columns:minmax(0,1fr); }
+[data-block-release="voice_activity_detection@0.1.1"] .cw-block-inspector.vad-ui section { margin-top:16px; }
+[data-block-release="voice_activity_detection@0.1.1"] .cw-block-inspector.vad-ui .vad-actions { padding:8px 0; border:0; }
 @media(max-width:560px) {
-  .vad-ui .vad-header,.vad-ui .vad-body,.vad-ui .vad-actions { padding:14px 16px; }
-  .vad-ui .vad-header h2 { font-size:18px; }
-  .vad-ui .vad-fields { grid-template-columns:minmax(0,1fr); }
+  [data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-header,[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-body,[data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-actions { padding:14px 16px; }
+  [data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-header h2 { font-size:18px; }
+  [data-block-release="voice_activity_detection@0.1.1"] .vad-ui .vad-fields { grid-template-columns:minmax(0,1fr); }
 }

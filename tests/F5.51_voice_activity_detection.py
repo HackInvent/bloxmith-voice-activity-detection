@@ -27,6 +27,8 @@ from bloxsmith_app.graph import WorkflowGraph
 from bloxsmith_app.orchestrator import WorkflowOrchestrator
 from ui_smoke_common import create_project_api, graph_payload, project_editor_url, run_playwright_smoke
 from block_test_artifacts import artifact_path
+from block_test_packages import install_test_package, surface_payload
+from playwright.sync_api import expect as expect_ui
 
 BLOCK = VoiceActivityDetectionBlock()
 
@@ -107,7 +109,8 @@ def test_contracts():
         html = render(node=node)["html"]
         assert "{{" not in html and "<script>" not in html, html
     for surface in ("modal", "inspector_panel"):
-        for asset in BLOCK.ui_assets(surface):
+        assert BLOCK.model["ui_assets"][surface], "Package assets must be declared statically"
+        for asset in BLOCK.model["ui_assets"][surface]:
             assert (BLOCK.directory / asset["path"]).is_file()
     assert (BLOCK.directory / "README.md").is_file()
     result = BLOCK.handle_ui_action(node=node, action="save_properties",
@@ -437,9 +440,13 @@ def test_real_graph_modes():
         assert not simulation.output_values.get("vad:1")
 
 
-def test_properties(page, server, _errors):
+def test_properties(page, server, _errors, *, origin="managed"):
     """FB5: inspect real shell screenshots, contained diagnostics, narrow layouts and atomic Apply."""
+    model = install_test_package(server, "voice_activity_detection", origin=origin)
     node = BLOCK.build_node_payload(node_id="vad", position={"x": 280, "y": 180})
+    node["block_version"] = model["version"]
+    for surface in ("modal", "inspector_panel"):
+        surface_payload(server, model, node, surface)
     created = create_project_api(server, title="VAD properties", document=graph_payload("VAD properties", [node], []))["project"]
     graph_id = created.get("graph_id") or created["project_id"]
     page.goto(project_editor_url(server.base_url, graph_id, workspace_project_id=created["workspace_project_id"]))
@@ -459,7 +466,7 @@ def test_properties(page, server, _errors):
         assert bounds["background"] == "rgb(255, 255, 255)" and bounds["left"] >= 0 and bounds["right"] <= width, bounds
         assert not bounds["overflow"] and bounds["close"] and bounds["apply"], bounds
         assert modal.locator('[data-block-modal-error-panel]').count() == 1
-        page.screenshot(path=artifact_path(f"vad-modal-{label}.png"))
+        page.screenshot(path=artifact_path(f"vad-{origin}-modal-{label}.png"))
     setting = modal.locator('[data-vad-setting="silence_ms"]')
     setting.fill("0")
     modal.locator('[data-vad-apply]').click()
@@ -475,10 +482,10 @@ def test_properties(page, server, _errors):
     page.locator('#pinInspectorButton').click()
     inspector = page.locator('#blockOwnedInspectorView [data-block-inspector-root][data-node-id="vad"]')
     inspector.wait_for(state="visible")
-    assert inspector.locator('[data-vad-setting="silence_ms"]').input_value() == "600"
-    assert inspector.locator('[data-vad-setting="min_level_dbfs"]').input_value() == "-44"
+    expect_ui(inspector.locator('[data-vad-setting="silence_ms"]')).to_have_value("600", timeout=10000)
+    expect_ui(inspector.locator('[data-vad-setting="min_level_dbfs"]')).to_have_value("-44", timeout=10000)
     assert not inspector.evaluate("element => element.scrollWidth > element.clientWidth + 1")
-    page.screenshot(path=artifact_path("vad-inspector.png"))
+    page.screenshot(path=artifact_path(f"vad-{origin}-inspector.png"))
 
 
 if __name__ == "__main__":
@@ -487,4 +494,6 @@ if __name__ == "__main__":
                  test_errors_and_cleanup, test_real_graph_modes):
         test()
         print(f"[ok] {test.__name__}", flush=True)
-    run_playwright_smoke("F5.51_voice_activity_detection", test_properties)
+    for origin in ("managed", "linked"):
+        run_playwright_smoke("F5.51_voice_activity_detection",
+                            lambda page, server, errors: test_properties(page, server, errors, origin=origin))

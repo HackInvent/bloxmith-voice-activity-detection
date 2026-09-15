@@ -1,8 +1,38 @@
 {
   "kind": "voice_activity_detection", "title": "Détection de voix (VAD)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "bloxsmith_compatibility": ["1.0.9"],
   "tested_with_bloxsmith": "1.0.9",
+  "ui_assets": {
+    "modal": [
+      {
+        "kind": "css",
+        "path": "assets/css/block_ui.css"
+      },
+      {
+        "kind": "js",
+        "path": "assets/js/common.js"
+      },
+      {
+        "kind": "js",
+        "path": "assets/js/block_modal.js"
+      }
+    ],
+    "inspector_panel": [
+      {
+        "kind": "css",
+        "path": "assets/css/block_ui.css"
+      },
+      {
+        "kind": "js",
+        "path": "assets/js/common.js"
+      },
+      {
+        "kind": "js",
+        "path": "assets/js/inspector_panel.js"
+      }
+    ]
+  },
   "ports": {
     "inputs": [
       {"id": 1, "name": "audio_in", "title": "Audio in", "accepts": ["audio/*"],
