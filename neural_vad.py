@@ -14,9 +14,9 @@ THRESHOLDS = (0.50, 0.60, 0.70, 0.80)
 def verified_model(path: Path = MODEL_PATH) -> Path:
     """Require the packaged v6.2.1 weights; never download or silently fall back at Run."""
     if not path.is_file() or path.stat().st_size > 3 * 1024 * 1024:
-        raise ValueError("Modèle Silero absent/invalide : réinstallez le paquet du bloc VAD.")
+        raise ValueError("Silero model missing or invalid: reinstall the VAD block package.")
     if hashlib.sha256(path.read_bytes()).hexdigest() != MODEL_SHA256:
-        raise ValueError("Modèle Silero altéré : réinstallez les poids vérifiés du bloc VAD.")
+        raise ValueError("Silero model altered: reinstall the verified weights of the VAD block.")
     return path
 
 
@@ -39,7 +39,7 @@ class SileroSpeech:
     def probability(self, pcm: bytes) -> float:
         """Advance recurrent state once per complete window and return the model's speech score."""
         if len(pcm) != FRAME_SAMPLES * 2:
-            raise ValueError("Silero attend exactement 512 échantillons PCM16 mono.")
+            raise ValueError("Silero expects exactly 512 mono PCM16 samples.")
         np = self.np
         samples = np.frombuffer(pcm, dtype="<i2").astype(np.float32).reshape(1, -1) / 32768.0
         probability, state = self.session.run(None, {
@@ -48,6 +48,6 @@ class SileroSpeech:
         })
         value = float(probability[0, 0])
         if not np.isfinite(value) or not 0 <= value <= 1 or not np.isfinite(state).all():
-            raise ValueError("Score ou état Silero invalide ; aucune parole inventée.")
+            raise ValueError("Invalid Silero score or state: no speech is invented.")
         self.state, self.context = state, samples[:, -64:].copy()
         return value

@@ -13,11 +13,11 @@ export function mountSettings(root, api) {
   function refresh() {
     if (disposed) return;
     button.disabled = busy || saved === JSON.stringify(snapshot()) || Boolean(api.isReadOnly?.());
-    button.textContent = busy ? "Application…" : "Appliquer";
+    button.textContent = busy ? "Applying…" : "Apply";
   }
   function dirty() {
     if (disposed) return;
-    feedback.textContent = saved === JSON.stringify(snapshot()) ? "Aucune modification." : "Modifications non appliquées.";
+    feedback.textContent = saved === JSON.stringify(snapshot()) ? "No change." : "Unapplied changes.";
     feedback.dataset.error = "false";
     refresh();
   }
@@ -26,7 +26,7 @@ export function mountSettings(root, api) {
     if (button.disabled || disposed) return;
     const invalid = [title, ...fields].find(field => !field.checkValidity());
     if (invalid) {
-      invalid.reportValidity(); feedback.textContent = "Vérifiez le champ signalé."; feedback.dataset.error = "true"; return;
+      invalid.reportValidity(); feedback.textContent = "Check the highlighted field."; feedback.dataset.error = "true"; return;
     }
     const values = snapshot();
     busy = true; refresh();
@@ -34,9 +34,9 @@ export function mountSettings(root, api) {
       const result = await api.applyAction("save_properties", values);
       if (result?.error) throw new Error(result.error);
       saved = JSON.stringify(values);
-      if (!disposed) feedback.textContent = saved === JSON.stringify(snapshot()) ? "Enregistré. Stop puis Run pour activer." : "Enregistré ; des modifications restent à appliquer.";
+      if (!disposed) feedback.textContent = saved === JSON.stringify(snapshot()) ? "Saved. Stop, then Run, to activate." : "Saved; some changes still need to be applied.";
     } catch (error) {
-      if (!disposed) { feedback.textContent = error.message || "Enregistrement impossible."; feedback.dataset.error = "true"; }
+      if (!disposed) { feedback.textContent = error.message || "Unable to save."; feedback.dataset.error = "true"; }
     } finally { busy = false; refresh(); }
   }
   for (const field of [title, ...fields]) { field.addEventListener("input", dirty); field.addEventListener("change", dirty); }

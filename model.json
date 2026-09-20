@@ -1,5 +1,5 @@
 {
-  "kind": "voice_activity_detection", "title": "Détection de voix (VAD)",
+  "kind": "voice_activity_detection", "title": "Voice activity detection (VAD)",
   "version": "0.1.1",
   "bloxsmith_compatibility": ["1.0.9"],
   "tested_with_bloxsmith": "1.0.9",
@@ -39,10 +39,10 @@
        "multiplicity": "one", "required": false, "execution_requirement": "not_required_for_execution",
        "transport": "audio_stream", "audio_stream": {"codecs": ["opus"], "sample_rates_hz": [48000],
        "channels": [1, 2], "overflow_policy": "disconnect"}},
-      {"id": 2, "name": "command_in", "title": "Cycle du flux", "accepts": ["application/json"],
+      {"id": 2, "name": "command_in", "title": "Stream cycle", "accepts": ["application/json"],
        "multiplicity": "one", "required": false, "execution_requirement": "not_required_for_execution", "transport": "message"}
     ],
-    "outputs": [{"id": 1, "name": "events_out", "title": "Activité vocale", "emits": ["application/json"],
+    "outputs": [{"id": 1, "name": "events_out", "title": "Voice activity", "emits": ["application/json"],
                  "multiplicity": "many", "transport": "message"}]
   },
   "config": {"aggressiveness": 2, "speech_start_ms": 160, "silence_ms": 500, "min_level_dbfs": -48, "drain_timeout_sec": 5},

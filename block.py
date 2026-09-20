@@ -35,9 +35,9 @@ _ABSENT = object()
 def _config(raw: Mapping | None) -> dict:
     """Normalize finite integer settings; compiler metadata never becomes VAD configuration."""
     if raw is not None and not isinstance(raw, Mapping):
-        raise ValueError("Configuration VAD invalide.")
+        raise ValueError("Invalid VAD configuration.")
     if set(raw or {}) - set(DEFAULTS) - {"position", "runtime_path", "runtime_path_label"}:
-        raise ValueError("Paramètre VAD inconnu.")
+        raise ValueError("Unknown VAD setting.")
     result = {}
     for key, default in DEFAULTS.items():
         value = (raw or {}).get(key, default)
@@ -45,10 +45,10 @@ def _config(raw: Mapping | None) -> dict:
             number = float(value)
             integer = int(number)
         except (ValueError, TypeError, OverflowError):
-            raise ValueError(f"{key} doit être un entier.") from None
+            raise ValueError(f"{key} must be an integer.") from None
         low, high = BOUNDS[key]
         if isinstance(value, bool) or integer != number or not low <= integer <= high:
-            raise ValueError(f"{key} doit être compris entre {low} et {high}.")
+            raise ValueError(f"{key} must be between {low} and {high}.")
         result[key] = integer
     return result
 
@@ -57,23 +57,23 @@ def _command(raw: Any) -> dict:
     """Accept bounded producer start/stop with exact final frame/byte counts and an abort flag."""
     if isinstance(raw, str):
         if len(raw.encode("utf-8")) > 4096:
-            raise ValueError("Commande VAD trop volumineuse.")
+            raise ValueError("VAD command too large.")
         try:
             raw = json.loads(raw)
         except (ValueError, RecursionError):
-            raise ValueError("command_in attend un JSON start/stop du producteur audio.") from None
+            raise ValueError("command_in expects a start/stop JSON from the audio producer.") from None
     if not isinstance(raw, Mapping) or raw.get("action") not in {"start", "stop"}:
-        raise ValueError("command_in attend start ou stop, pas une commande d’interruption.")
+        raise ValueError("command_in expects start or stop, not an interruption command.")
     allowed = {"action", "stream_id"} if raw["action"] == "start" else {"action", "stream_id", "frame_count", "byte_count", "aborted"}
     if set(raw) - allowed or not isinstance(raw.get("stream_id"), str) or not 1 <= len(raw["stream_id"]) <= 128:
-        raise ValueError("Commande VAD invalide : stream_id et champs du cycle audio attendus.")
+        raise ValueError("Invalid VAD command: stream_id and the audio cycle fields are expected.")
     result = dict(raw)
     if result["action"] == "stop":
         for field in ("frame_count", "byte_count"):
             if type(result.get(field)) is not int or not 0 <= result[field] <= 2**53 - 1:
-                raise ValueError("Stop VAD exige frame_count et byte_count entiers positifs ou nuls.")
+                raise ValueError("A VAD stop requires frame_count and byte_count as zero or positive integers.")
         if not isinstance(result.get("aborted", False), bool):
-            raise ValueError("aborted doit être un booléen.")
+            raise ValueError("aborted must be a boolean.")
         result.setdefault("aborted", False)
     return result
 
@@ -171,7 +171,7 @@ class _Detector:
     def finish(self) -> None:
         """Finalize only a verified producer stop; inactivity and abort do not enter here."""
         if len(self.pcm) % 2:
-            raise ValueError("Dernier échantillon PCM incomplet.")
+            raise ValueError("Incomplete last PCM sample.")
         if self.pcm:
             self._frame(bytes(self.pcm).ljust(FRAME_BYTES, b"\0"), len(self.pcm) // 2)
             self.pcm.clear()
@@ -196,13 +196,13 @@ class _Capture:
         """Reject gaps, profile changes and queue limits before retaining encoded bytes."""
         profile = (frame.source_id, frame.codec, frame.sample_rate_hz, frame.channels)
         if frame.codec != "opus" or frame.sample_rate_hz != 48000 or frame.channels not in {1, 2}:
-            raise ValueError("VAD attend Opus WebM/Ogg, horloge 48 kHz, mono ou stéréo.")
+            raise ValueError("The VAD expects Opus WebM/Ogg, a 48 kHz clock, mono or stereo.")
         if (self.sequence is not None and frame.sequence != self.sequence + 1) or (self.profile and self.profile != profile):
-            raise ValueError("Trame VAD manquante ou profil audio modifié ; redémarrez la source.")
+            raise ValueError("Missing VAD frame or changed audio profile: restart the source.")
         if self.closing_at is not None or not frame.payload or len(frame.payload) > 524288:
-            raise ValueError("Trame VAD vide, tardive ou trop volumineuse.")
+            raise ValueError("Empty, late or oversized VAD frame.")
         if len(self.pending) + len(frame.payload) > MAX_BUFFER:
-            raise ValueError("Tampon VAD saturé : le décodage ne suit plus la source.")
+            raise ValueError("VAD buffer saturated: decoding no longer keeps up with the source.")
         self.profile, self.sequence = profile, frame.sequence
         self.frames += 1
         self.bytes += len(frame.payload)
@@ -212,9 +212,9 @@ class _Capture:
     def finish(self, command: dict) -> None:
         """Record exact producer totals; network inactivity is never a speech ending."""
         if command["aborted"]:
-            raise ValueError("Source audio interrompue ; aucun faux événement de fin de parole n’est émis.")
+            raise ValueError("Audio source interrupted: no false end-of-speech event is emitted.")
         if self.stop is not None and self.stop != command:
-            raise ValueError("Commandes stop VAD contradictoires.")
+            raise ValueError("Conflicting VAD stop commands.")
         if self.stop is None:
             self.stop, self.stopped_at = command, time.monotonic()
         self.complete()
@@ -224,14 +224,14 @@ class _Capture:
         if self.stop is None:
             return False
         if self.frames > self.stop["frame_count"] or self.bytes > self.stop["byte_count"]:
-            raise ValueError("Totaux audio VAD incohérents après stop.")
+            raise ValueError("Inconsistent VAD audio totals after stop.")
         return self.frames == self.stop["frame_count"] and self.bytes == self.stop["byte_count"]
 
     def _open(self) -> None:
         """Restrict FFmpeg to Opus on stdin and PCM on stdout: no network or user files."""
         container = {b"OggS": "ogg", b"\x1aE\xdf\xa3": "matroska"}.get(bytes(self.pending[:4]))
         if not container:
-            raise ValueError("En-tête Opus absent : commencez au début du conteneur WebM/Ogg.")
+            raise ValueError("Missing Opus header: start at the beginning of the WebM/Ogg container.")
         self.process = subprocess.Popen([
             shutil.which("ffmpeg"), "-hide_banner", "-loglevel", "error", "-nostdin",
             "-probesize", "32", "-analyzeduration", "0", "-protocol_whitelist", "pipe",
@@ -245,13 +245,13 @@ class _Capture:
         """Advance finite IO batches, drain stderr, and report fully decoded explicit EOF."""
         now = time.monotonic()
         if self.stopped_at is not None and now - self.stopped_at > self.config["drain_timeout_sec"]:
-            raise ValueError("Flux VAD incomplet après stop ou décodeur trop lent.")
+            raise ValueError("Incomplete VAD stream after stop, or decoder too slow.")
         if self.process is None:
             if len(self.pending) >= 4:
                 self._open()
             elif self.complete():
                 if self.pending:
-                    raise ValueError("En-tête audio VAD tronqué.")
+                    raise ValueError("Truncated VAD audio header.")
                 return True
             else:
                 return False
@@ -275,7 +275,7 @@ class _Capture:
         if process.poll() is None:
             return False
         if process.returncode != 0 or self.closing_at is None:
-            raise ValueError("Le décodeur VAD s’est arrêté : audio invalide ou tronqué.")
+            raise ValueError("The VAD decoder stopped: invalid or truncated audio.")
         self.detector.finish()
         return True
 
@@ -311,9 +311,9 @@ class VoiceActivityDetectionBlock(BlockDefinition):
             if (len(ports) != len(expected) or set(by_id) != {port_id for port_id, _, _ in expected}
                     or any((by_id[port_id].name, getattr(by_id[port_id], "transport", "message")) != (name, transport)
                            for port_id, name, transport in expected)):
-                raise ValueError("VAD nécessite audio_in, command_in et events_out fixes.")
+                raise ValueError("The VAD requires its fixed audio_in, command_in and events_out ports.")
         if any(p.required or p.multiplicity != "one" or getattr(p, "execution_requirement", "not_required_for_execution") != "not_required_for_execution" for p in context.input_ports):
-            raise ValueError("Les deux entrées VAD doivent rester facultatives à multiplicité un.")
+            raise ValueError("Both VAD inputs must stay optional with multiplicity one.")
 
     def prepare_runtime(self, context: BlockRuntimePreparationContext) -> BlockRuntimePreparation:
         """Validate without IO; active listening does not wait for Play or commands."""
@@ -325,12 +325,12 @@ class VoiceActivityDetectionBlock(BlockDefinition):
         """Check prerequisites without installing anything or starting a decoder."""
         if context.runtime_mode == "zeromq_active":
             if not shutil.which("ffmpeg") or any(importlib.util.find_spec(name) is None for name in ("numpy", "onnxruntime")):
-                return _failure("VAD requiert FFmpeg, NumPy et ONNX Runtime ; installez blocs/voice_activity_detection/requirements.txt avec l’interpréteur du serveur.")
+                return _failure("The VAD requires FFmpeg, NumPy and ONNX Runtime: install blocs/voice_activity_detection/requirements.txt with the server interpreter.")
             try:
                 verified_model()
             except ValueError as exc:
                 return _failure(str(exc))
-        return BlockRuntimeResult(last_message="VAD Silero prêt : reconnaissance locale de parole au premier flux audio.")
+        return BlockRuntimeResult(last_message="Silero VAD ready: local speech recognition on the first audio stream.")
 
     def execute_runtime(self, context: BlockRuntimeContext) -> BlockRuntimeResult:
         """Forward only fresh lifecycle data; simulation starts no detector or IO."""
@@ -338,7 +338,7 @@ class VoiceActivityDetectionBlock(BlockDefinition):
             self._ports(context)
             _config(context.config)
             if context.runtime_mode != "zeromq_active":
-                return BlockRuntimeResult(status="skipped", last_message="Simulation : aucune détection vocale ni émission JSON.")
+                return BlockRuntimeResult(status="skipped", last_message="Simulation: no voice detection and no JSON emission.")
             raw = _ABSENT
             if context.input_events:
                 for event in context.input_events:
@@ -349,12 +349,12 @@ class VoiceActivityDetectionBlock(BlockDefinition):
                 if attribute is not None and attribute.status == "updated":
                     raw = attribute.value
             if raw is _ABSENT:
-                return BlockRuntimeResult(status="skipped", last_message="VAD à l’écoute de audio_in.")
+                return BlockRuntimeResult(status="skipped", last_message="VAD listening on audio_in.")
             sender = context.services.get("runtime_listener")
             if sender is None:
-                raise ValueError("Listener VAD indisponible : Stop puis Run.")
+                raise ValueError("VAD listener unavailable: Stop, then Run.")
             sender.send(_command(raw))
-            return BlockRuntimeResult(last_message="Cycle audio transmis au VAD.")
+            return BlockRuntimeResult(last_message="Audio cycle forwarded to the VAD.")
         except (ValueError, TypeError) as exc:
             return _failure(str(exc))
 
@@ -368,10 +368,10 @@ class VoiceActivityDetectionBlock(BlockDefinition):
             measure = event["detection"]
             context.emit_result(BlockRuntimeResult(outputs=[BlockRuntimeOutput(port_id=1, port_name="events_out",
                 value=json.dumps(event), content_type="application/json")],
-                last_message="Parole détectée." if event["event"] == "speech_started" else "Fin de parole détectée.",
+                last_message="Speech detected." if event["event"] == "speech_started" else "End of speech detected.",
                 logs=[f"[vad-speech] {event['event']} audio={event['audio_end_ms']}ms "
-                      f"score={measure['speech_score']} niveau={measure['level_dbfs']}dBFS "
-                      f"seuil={measure['speech_threshold']} confirmation={measure['confirmation_ms']}ms"],
+                      f"score={measure['speech_score']} level={measure['level_dbfs']}dBFS "
+                      f"threshold={measure['speech_threshold']} confirmation={measure['confirmation_ms']}ms"],
                 metadata={self.kind: {"state": event["event"], **event}}))
 
         def diagnostic(measure: dict) -> None:
@@ -382,7 +382,7 @@ class VoiceActivityDetectionBlock(BlockDefinition):
             """Admit at most four sessions, including stops awaiting their final frames."""
             if stream_id not in captures:
                 if len(captures) >= 4:
-                    raise ValueError("Maximum quatre captures VAD : reliez start/stop du producteur.")
+                    raise ValueError("At most four VAD captures: wire the producer start/stop.")
                 captures[stream_id] = _Capture(config, stream_id, emit, diagnostic)
             return captures[stream_id]
 
@@ -396,7 +396,7 @@ class VoiceActivityDetectionBlock(BlockDefinition):
         try:
             audio = context.services.get("runtime_audio_streams")
             if audio is None or not audio.available:
-                raise ValueError("Reliez audio_in à Microphone Stream.audio_out ou une autre source Opus.")
+                raise ValueError("Wire audio_in to Microphone Stream.audio_out or another Opus source.")
             while not context.stop_requested():
                 incoming = context.receive_command(timeout_sec=0)
                 if incoming is not None:
@@ -417,7 +417,7 @@ class VoiceActivityDetectionBlock(BlockDefinition):
                     if frame.stream_id not in retired:
                         try:
                             if sum(len(item.pending) for item in captures.values()) + len(frame.payload) > MAX_BUFFER:
-                                raise ValueError("Tampon global VAD saturé.")
+                                raise ValueError("The global VAD buffer is saturated.")
                             capture(frame.stream_id).feed(frame)
                         except Exception as exc:
                             context.emit_result(_failure(str(exc), frame.stream_id))
@@ -441,9 +441,9 @@ class VoiceActivityDetectionBlock(BlockDefinition):
     def _settings_html(self, node: dict) -> str:
         """Place speech timing first and explain all tuning with associated labels."""
         values = _config(node.get("config"))
-        labels = {"speech_start_ms": "Parole minimale (ms)", "silence_ms": "Silence avant fin de parole (ms)",
-                  "min_level_dbfs": "Seuil sonore minimal (dBFS)",
-                  "aggressiveness": "Exigence de parole Silero (0–3)", "drain_timeout_sec": "Attente après stop (s)"}
+        labels = {"speech_start_ms": "Minimum speech (ms)", "silence_ms": "Silence before end of speech (ms)",
+                  "min_level_dbfs": "Minimum sound threshold (dBFS)",
+                  "aggressiveness": "Silero speech requirement (0–3)", "drain_timeout_sec": "Wait after stop (s)"}
         return ''.join(f'<label>{label}<input type="number" data-vad-setting="{key}" value="{values[key]}" '
             f'min="{BOUNDS[key][0]}" max="{BOUNDS[key][1]}" step="1" required /></label>' for key, label in labels.items())
 
@@ -472,10 +472,10 @@ class VoiceActivityDetectionBlock(BlockDefinition):
         try:
             title = values.get("title", node.get("title") or self.default_title())
             if not isinstance(title, str) or not 1 <= len(title.strip()) <= 200:
-                raise ValueError("Le nom doit contenir de 1 à 200 caractères.")
+                raise ValueError("The name must contain 1 to 200 characters.")
             settings = values.get("config", {})
             if not isinstance(settings, Mapping) or set(settings) - set(DEFAULTS):
-                raise ValueError("Réglages VAD inconnus.")
+                raise ValueError("Unknown VAD settings.")
             return {"node_patch": {"title": title.strip(), "config": _config({**(node.get("config") or {}), **settings})}}
         except (ValueError, TypeError) as exc:
             return {"error": str(exc)}
