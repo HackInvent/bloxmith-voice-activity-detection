@@ -25,6 +25,20 @@
       ],
       "suite_count": 2,
       "report_sha256": "c02b1c14d540f623a641097c15b521531d6701e8c2edcc16d52602e300d2b31c"
+    },
+    {
+      "bloxsmith_version": "1.0.9",
+      "framework_commit": "ddb6d0f054d92e75b9ff1cdb9e9ee16457c5f962",
+      "framework_source_sha256": "ce69a55fa289983c81e579c5beb96ff22ae8911f8efabb602c4054e639a3061f",
+      "tested_at": "2026-09-22T00:16:57.397945+00:00",
+      "status": "passed",
+      "installation_mode": "bundled",
+      "suite_paths": [
+        "tests/F5.51_voice_activity_detection.py",
+        "tests/F5.52_vad_release_runtime.py"
+      ],
+      "suite_count": 2,
+      "report_sha256": "5edfda3ee15686cc4faddd951b973fa1a6ae9a0aaa375aa9d30bfdc062ad1dd7"
     }
   ]
 }
