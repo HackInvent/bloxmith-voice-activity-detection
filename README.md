@@ -10,9 +10,6 @@ Verified BloxSmith versions: **1.0.9** (bundled-block tests; see [test evidence]
 
 [![VAD — Detects speech intervals in audio and emits JSON activity events, without transcribing.](media/thumbnail.webp)](media/cover.png)
 
-*Concept illustration. [Artwork and generation prompt](media/README.md).*
-
-
 Locally detects periods of speech using **Silero VAD v6.2.1 (ONNX)**, without transcribing, identifying speakers, recording files or sending audio to an external service. The block emits JSON events; an existing Python block can decide which commands to send to other blocks. VAD itself does not stop any block.
 
 ## Wiring
